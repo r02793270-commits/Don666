@@ -1,35 +1,80 @@
-name: Build Android APK
+#!/usr/bin/env sh
 
-on:
-  push:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+##############################################################################
+##
+##  Gradle start up script for UN*X
+##
+##############################################################################
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# Attempt to set APP_HOME
+# Resolve links - $0 may be a softlink
+PRG="$0"
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+# Need this for relative symlinks.
+while [ -h "$PRG" ]; do
+    ls=`ls -ld "$PRG"`
+    link=`ls -ld "$PRG" | sed -e 's/.*-> //' `
+    if expr "$link" : '/.*' > /dev/null; then
+        PRG="$link"
+    else
+        PRG=`dirname "$PRG"`/"$link"
+    fi
+done
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+SAVED="`pwd`"
+CDPATH=
+cd "`dirname \"$PRG\"`/" >/dev/null
+APP_HOME="`pwd -P`"
+cd "$SAVED" >/dev/null
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+APP_NAME="Gradle"
+APP_BASE_NAME=`basename "$0"`
 
-      - name: Generate Gradle Wrapper & Build APK
-        run: |
-          gradle wrapper
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+# Use the maximum available, or 6000, if we have trouble parsing it.
+if [ -n "$JAVA_HOME" ] ; then
+    if [ -x "$JAVA_HOME/sh/java" ] ; then
+        # IBM's JDK on AIX uses sh/java, not bin/java
+        JAVACMD="$JAVA_HOME/sh/java"
+    else
+        JAVACMD="$JAVA_HOME/bin/java"
+    fi
+    if [ ! -x "$JAVACMD" ] ; then
+        die "JAVA_HOME is set to an invalid directory: $JAVA_HOME
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+    fi
+else
+    JAVACMD="java"
+    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+fi
+
+# Increase the maximum file descriptors if we can.
+case "`uname`" in
+    Darwin* | BSD* )
+        PRG="$0"
+        PRGDIR=`dirname "$PRG"`
+        MAX_FD=`launchctl limit maxfiles 2>/dev/null | awk '{print $2}'`
+        if [ -n "$MAX_FD" ] && [ "$MAX_FD" != "unlimited" ] ; then
+            ulimit -n $MAX_FD
+        fi
+        ;;
+esac
+
+# For Darwin, add options to specify how the application icon is displayed
+if [ -n "$TERM" ] ; then
+    case "`uname`" in
+        Darwin* )
+            GRADLE_OPTS="$GRADLE_OPTS -Dapple.awt.UIElement=true"
+            ;;
+    esac
+fi
+
+# Escape application args
+exec "$JAVACMD" $DEFAULT_JVM_OPTS$GRADLE_OPTS "-classpath" "$APP_HOME/gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain "$@"
